@@ -340,8 +340,14 @@ const DATA = {
     const omzetKemarin = yesterdayPenjualan
       ? yesterdayPenjualan.items.reduce((s, i) => s + (i.terjual * i.harga), 0) : 0;
 
-    const saldoKas = todayKas
-      ? (todayKas.saldo_awal + todayKas.penerimaan_tunai + todayKas.penerimaan_piutang - todayKas.pengeluaran - todayKas.setoran_bank) : 0;
+    let saldoKas = 0;
+    if (todayKas) {
+      saldoKas = todayKas.saldo_awal + todayKas.penerimaan_tunai + todayKas.penerimaan_piutang - todayKas.pengeluaran - todayKas.setoran_bank;
+    } else if (kas.length > 0) {
+      const sortedKas = [...kas].sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+      const latestKas = sortedKas[0];
+      saldoKas = latestKas.saldo_awal + latestKas.penerimaan_tunai + latestKas.penerimaan_piutang - latestKas.pengeluaran - latestKas.setoran_bank;
+    }
 
     const totalPiutang = piutang.reduce((s, p) => s + (p.total || 0), 0);
     const piutangMacet = piutang.reduce((s, p) => s + (p.usia_gt60 || 0), 0);

@@ -257,7 +257,7 @@ const STOCK_OPNAME = {
       const selisih = (item.stok_fisik||0) - item.stok_sistem;
       if (selisih < 0) {
         const p = DATA.getProdukById(item.produk_id);
-        return s + (Math.abs(selisih) * (p ? p.harga_beli : 0));
+        return s + (Math.abs(selisih) * (p ? p.harga_jual : 0));
       }
       return s;
     }, 0);
@@ -279,7 +279,7 @@ const STOCK_OPNAME = {
               ${rec.items.map(item => {
                 const selisih = (item.stok_fisik||0) - item.stok_sistem;
                 const p = DATA.getProdukById(item.produk_id);
-                const kerugian = selisih < 0 ? Math.abs(selisih) * (p ? p.harga_beli : 0) : 0;
+                const kerugian = selisih < 0 ? Math.abs(selisih) * (p ? p.harga_jual : 0) : 0;
                 return `<tr>
                   <td class="bold">${DATA.getProdukNama(item.produk_id)}</td>
                   <td>${item.stok_sistem}</td>
