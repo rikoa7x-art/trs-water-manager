@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <!-- Outer ring gradient -->
+    <radialGradient id="outerRing" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#a8e063"/>
+      <stop offset="50%" stop-color="#7dc832"/>
+      <stop offset="100%" stop-color="#5a9e1a"/>
+    </radialGradient>
+    <!-- Inner background gradient -->
+    <radialGradient id="innerBg" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#f0fde8"/>
+      <stop offset="100%" stop-color="#d4f5b8"/>
+    </radialGradient>
+    <!-- TRS text gradient -->
+    <linearGradient id="trsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a6b2a"/>
+      <stop offset="50%" stop-color="#2d8a3e"/>
+      <stop offset="100%" stop-color="#6ab52a"/>
+    </linearGradient>
+    <!-- Wave gradient 1 (dark teal) -->
+    <linearGradient id="wave1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1a6b4a"/>
+      <stop offset="100%" stop-color="#2d8a5a"/>
+    </linearGradient>
+    <!-- Wave gradient 2 (medium green) -->
+    <linearGradient id="wave2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4a9e2a"/>
+      <stop offset="100%" stop-color="#6aba3a"/>
+    </linearGradient>
+    <!-- Wave gradient 3 (light lime) -->
+    <linearGradient id="wave3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7dc832"/>
+      <stop offset="100%" stop-color="#9ad84a"/>
+    </linearGradient>
+    <!-- Clip path for inner circle -->
+    <clipPath id="innerClip">
+      <circle cx="200" cy="200" r="163"/>
+    </clipPath>
+  </defs>
+
+  <!-- Outer ring -->
+  <circle cx="200" cy="200" r="195" fill="url(#outerRing)"/>
+  <!-- Outer ring highlight -->
+  <circle cx="200" cy="200" r="195" fill="none" stroke="#b8e870" stroke-width="6" opacity="0.5"/>
+  <!-- Outer ring shadow inner -->
+  <circle cx="200" cy="200" r="178" fill="none" stroke="#4a8a18" stroke-width="4" opacity="0.4"/>
+
+  <!-- Inner white/light green circle -->
+  <circle cx="200" cy="200" r="168" fill="url(#innerBg)"/>
+  <!-- Inner ring border -->
+  <circle cx="200" cy="200" r="168" fill="none" stroke="#88cc44" stroke-width="2" opacity="0.6"/>
+
+  <!-- Subtle radial background pattern lines -->
+  <g clip-path="url(#innerClip)" opacity="0.07">
+    <line x1="200" y1="32" x2="200" y2="368" stroke="#3a8a2a" stroke-width="1"/>
+    <line x1="32" y1="200" x2="368" y2="200" stroke="#3a8a2a" stroke-width="1"/>
+    <line x1="85" y1="85" x2="315" y2="315" stroke="#3a8a2a" stroke-width="1"/>
+    <line x1="315" y1="85" x2="85" y2="315" stroke="#3a8a2a" stroke-width="1"/>
+    <line x1="115" y1="50" x2="285" y2="350" stroke="#3a8a2a" stroke-width="1"/>
+    <line x1="50" y1="115" x2="350" y2="285" stroke="#3a8a2a" stroke-width="1"/>
+    <line x1="285" y1="50" x2="115" y2="350" stroke="#3a8a2a" stroke-width="1"/>
+    <line x1="350" y1="115" x2="50" y2="285" stroke="#3a8a2a" stroke-width="1"/>
+  </g>
+
+  <!-- "Air Mineral" text -->
+  <text x="200" y="118" text-anchor="middle" font-family="'Arial', 'Helvetica', sans-serif" font-size="26" font-weight="600" fill="#1a3a1a" letter-spacing="1">Air Mineral</text>
+
+  <!-- TRS large text -->
+  <text x="198" y="210" text-anchor="middle"
+        font-family="'Arial Black', 'Arial', 'Helvetica', sans-serif"
+        font-size="108" font-weight="900" fill="url(#trsGrad)"
+        letter-spacing="-2">TRS</text>
+
+  <!-- "Water" text -->
+  <text x="200" y="255" text-anchor="middle"
+        font-family="'Arial', 'Helvetica', sans-serif"
+        font-size="42" font-weight="700" fill="#4a9e2a"
+        letter-spacing="4">Water</text>
+
+  <!-- Wave 1 - back (lightest/widest) -->
+  <path d="M 55 285 Q 100 268 145 278 Q 190 288 235 275 Q 280 262 325 272 Q 348 278 368 272"
+        fill="none" stroke="url(#wave3)" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Wave 2 - middle -->
+  <path d="M 48 298 Q 95 278 145 292 Q 195 306 245 290 Q 295 274 345 288 Q 358 292 372 289"
+        fill="none" stroke="url(#wave2)" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Wave 3 - front (darkest/narrowest) -->
+  <path d="M 62 313 Q 110 295 158 310 Q 206 325 254 308 Q 302 291 350 307"
+        fill="none" stroke="url(#wave1)" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Small bottom arc waves -->
+  <path d="M 105 330 Q 145 318 185 328 Q 225 338 265 326 Q 285 319 310 326"
+        fill="none" stroke="#2d8a3e" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 130 345 Q 165 336 200 343 Q 235 350 270 341"
+        fill="none" stroke="#4a9e2a" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Bottom tagline text -->
+  <text x="200" y="373" text-anchor="middle"
+        font-family="'Arial', 'Helvetica', sans-serif"
+        font-size="11.5" font-weight="500" fill="#2d6b1a" letter-spacing="0.3"
+        transform="rotate(-8 200 200)" style="transform-origin:200px 200px">
+    Air Minum Dalam Kemasan PERUMDA TRS
+  </text>
+  <!-- Actually place it properly at bottom arc -->
+  <path id="bottomArc" d="M 65 370 A 145 145 0 0 0 335 370" fill="none"/>
+  <text font-family="'Arial', 'Helvetica', sans-serif" font-size="11" font-weight="600" fill="#2d6b1a" letter-spacing="0.5">
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">Air Minum Dalam Kemasan PERUMDA TRS</textPath>
+  </text>
+</svg>
