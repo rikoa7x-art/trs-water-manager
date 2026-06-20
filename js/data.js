@@ -27,10 +27,10 @@ const DB = {
    ============================================= */
 const SEED = {
   produk: [
-    { id: 'P1', nama: 'Galon 19L', satuan: 'Unit', harga_jual: 18000, harga_beli: 14000, stok_minimal: 50 },
-    { id: 'P2', nama: 'Botol 600ml (1 dus)', satuan: 'Dus', harga_jual: 32000, harga_beli: 26000, stok_minimal: 30 },
-    { id: 'P3', nama: 'Botol 330ml (1 dus)', satuan: 'Dus', harga_jual: 26000, harga_beli: 21000, stok_minimal: 20 },
-    { id: 'P4', nama: 'Cup 220ml (1 dus)', satuan: 'Dus', harga_jual: 19000, harga_beli: 15000, stok_minimal: 40 }
+    { id: 'P1', nama: 'Galon 19L', satuan: 'Unit', harga_jual: 16000, harga_beli: 14000, stok_minimal: 50 },
+    { id: 'P2', nama: 'Botol 600ml (1 dus)', satuan: 'Dus', harga_jual: 40000, harga_beli: 26000, stok_minimal: 30 },
+    { id: 'P3', nama: 'Botol 330ml (1 dus)', satuan: 'Dus', harga_jual: 35000, harga_beli: 21000, stok_minimal: 20 },
+    { id: 'P4', nama: 'Cup 200ml (1 dus)', satuan: 'Dus', harga_jual: 17000, harga_beli: 15000, stok_minimal: 40 }
   ],
 
   pelanggan: [
@@ -417,6 +417,28 @@ function initSeedData() {
       DB.set(key, val);
     });
     DB.set('initialized', true);
+  } else {
+    // Force update product prices to the new brand prices requested by user
+    const currentProducts = DB.get('produk');
+    if (currentProducts && currentProducts.length > 0) {
+      let updated = false;
+      const updatesMap = {
+        'P1': { nama: 'Galon 19L', harga_jual: 16000 },
+        'P2': { nama: 'Botol 600ml (1 dus)', harga_jual: 40000 },
+        'P3': { nama: 'Botol 330ml (1 dus)', harga_jual: 35000 },
+        'P4': { nama: 'Cup 200ml (1 dus)', harga_jual: 17000 }
+      };
+      const newProducts = currentProducts.map(p => {
+        if (updatesMap[p.id]) {
+          updated = true;
+          return { ...p, ...updatesMap[p.id] };
+        }
+        return p;
+      });
+      if (updated) {
+        DB.set('produk', newProducts);
+      }
+    }
   }
   // Ensure company name is set to 'TRS water'
   if (!DB.get('company_name') || DB.get('company_name') === 'PT. Tirta Nusantara') {
