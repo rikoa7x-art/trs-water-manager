@@ -96,13 +96,6 @@
   <path d="M 130 345 Q 165 336 200 343 Q 235 350 270 341"
         fill="none" stroke="#4a9e2a" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
 
-  <!-- Bottom tagline text -->
-  <text x="200" y="373" text-anchor="middle"
-        font-family="'Arial', 'Helvetica', sans-serif"
-        font-size="11.5" font-weight="500" fill="#2d6b1a" letter-spacing="0.3"
-        transform="rotate(-8 200 200)" style="transform-origin:200px 200px">
-    Air Minum Dalam Kemasan PERUMDA TRS
-  </text>
   <!-- Actually place it properly at bottom arc -->
   <path id="bottomArc" d="M 65 370 A 145 145 0 0 0 335 370" fill="none"/>
   <text font-family="'Arial', 'Helvetica', sans-serif" font-size="11" font-weight="600" fill="#2d6b1a" letter-spacing="0.5">
