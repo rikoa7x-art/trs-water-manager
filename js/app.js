@@ -48,6 +48,7 @@ const APP = {
   init() {
     // Setup event listeners once on first load
     this.setupListeners();
+    this.initDarkMode();
 
     // Check login state
     const loggedIn = sessionStorage.getItem('amdk_logged_in') === 'true';
@@ -134,6 +135,7 @@ const APP = {
     const companyName = DB.get('company_name') || 'TRS water';
     const el = document.getElementById('companyNameDisplay');
     if (el) el.textContent = companyName;
+    this.updateGreeting();
 
     // Init page
     const initialPage = window.location.hash.slice(1) || 'dashboard';
@@ -224,6 +226,7 @@ const APP = {
   },
 
   postRender(page) {
+    requestAnimationFrame(() => animateCounters());
     switch (page) {
       case 'dashboard':
         if (typeof DASHBOARD !== 'undefined') DASHBOARD.initCharts();
@@ -337,7 +340,7 @@ const APP = {
         `).join('')}
       </div>
       <button onclick="APP.closeModal();APP.logout()" class="btn btn-ghost w-full" style="justify-content:center;border-color:rgba(220,38,38,0.18);color:var(--accent-red);background:rgba(220,38,38,0.02);padding:12px;margin-top:4px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 01-2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         <span style="font-weight:700">Keluar dari Aplikasi</span>
       </button>`,
       null
@@ -345,8 +348,76 @@ const APP = {
     // Hide save button for this modal
     document.getElementById('modalSave').style.display = 'none';
     document.getElementById('modalCancel').textContent = 'Tutup';
-  }
+  },
+
+  toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('amdk_dark_mode', isDark ? 'true' : 'false');
+    this.updateDarkModeIcon(isDark);
+  },
+
+  updateDarkModeIcon(isDark) {
+    const icon = document.getElementById('darkModeIcon');
+    if (icon) {
+      icon.innerHTML = isDark
+        ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+        : '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+    }
+  },
+
+  initDarkMode() {
+    const savedMode = localStorage.getItem('amdk_dark_mode');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedMode === 'true' || (savedMode === null && prefersDark);
+    if (isDark) {
+      document.body.classList.add('dark-mode');
+    }
+    this.updateDarkModeIcon(isDark);
+  },
+
+  updateGreeting() {
+    const el = document.getElementById('greetingText');
+    if (!el) return;
+    const hour = new Date().getHours();
+    let greeting = 'Selamat Malam';
+    if (hour >= 5 && hour < 11) greeting = 'Selamat Pagi';
+    else if (hour >= 11 && hour < 15) greeting = 'Selamat Siang';
+    else if (hour >= 15 && hour < 18) greeting = 'Selamat Sore';
+    el.textContent = greeting + ' 👋';
+  },
 };
+
+function animateCounters() {
+  document.querySelectorAll('.kpi-value').forEach(el => {
+    const text = el.textContent;
+    const match = text.match(/[\d.,]+/);
+    if (!match) return;
+    const numStr = match[0].replace(/\./g, '').replace(/,/g, '.');
+    const target = parseFloat(numStr);
+    if (isNaN(target) || target === 0) return;
+    
+    const prefix = text.substring(0, text.indexOf(match[0]));
+    const suffix = text.substring(text.indexOf(match[0]) + match[0].length);
+    const duration = 600;
+    const start = performance.now();
+    
+    const step = (timestamp) => {
+      const progress = Math.min((timestamp - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = target * eased;
+      
+      if (target >= 1000) {
+        el.textContent = prefix + Math.round(current).toLocaleString('id-ID') + suffix;
+      } else {
+        el.textContent = prefix + current.toFixed(target % 1 !== 0 ? 1 : 0).replace('.', ',') + suffix;
+      }
+      
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = text;
+    };
+    requestAnimationFrame(step);
+  });
+}
 
 window.APP = APP;
 

@@ -221,7 +221,14 @@ const DASHBOARD = {
           label: 'Omzet',
           data: values,
           borderColor: '#16a34a',
-          backgroundColor: 'rgba(22,163,74,0.06)',
+          backgroundColor: (context) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+            gradient.addColorStop(0, 'rgba(22,163,74,0.2)');
+            gradient.addColorStop(0.5, 'rgba(22,163,74,0.08)');
+            gradient.addColorStop(1, 'rgba(22,163,74,0)');
+            return gradient;
+          },
           borderWidth: 2.5,
           pointBackgroundColor: '#16a34a',
           pointBorderColor: '#ffffff',
