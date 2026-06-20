@@ -1284,3 +1284,90 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
     bottom: calc(72px + max(0px, env(safe-area-inset-bottom)));
   }
 }
+
+/* =============================================
+   LOGIN SCREEN
+   ============================================= */
+.login-screen-wrap {
+  position: fixed;
+  inset: 0;
+  background: #f8fafc;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.login-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  animation: scaleUpIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleUpIn {
+  from { opacity: 0; transform: scale(0.92) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.login-logo {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  border: 2px solid rgba(22, 163, 74, 0.15);
+  box-shadow: var(--shadow-glow-green);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.login-logo img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.login-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.login-card form {
+  text-align: left;
+}
+
+/* Auth state displays */
+body.logged-out #sidebar,
+body.logged-out #mainWrapper,
+body.logged-out #mobileBottomNav,
+body.logged-out #fabBtn {
+  display: none !important;
+}
+
+body.logged-in #loginScreen {
+  display: none !important;
+}

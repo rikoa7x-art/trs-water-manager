@@ -43,17 +43,25 @@ if (typeof Chart !== 'undefined') {
 const APP = {
   currentPage: 'dashboard',
 
-  init() {
-    // Date display
-    const now = new Date();
-    document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', {
-      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
-    });
+  listenersSetup: false,
 
-    // Company name
-    const companyName = DB.get('company_name') || 'TRS water';
-    const el = document.getElementById('companyNameDisplay');
-    if (el) el.textContent = companyName;
+  init() {
+    // Setup event listeners once on first load
+    this.setupListeners();
+
+    // Check login state
+    const loggedIn = sessionStorage.getItem('amdk_logged_in') === 'true';
+    if (!loggedIn) {
+      document.body.className = 'logged-out';
+      return;
+    }
+
+    document.body.className = 'logged-in';
+    this.initAfterLogin();
+  },
+
+  setupListeners() {
+    if (this.listenersSetup) return;
 
     // Nav items in sidebar (data-page attribute)
     document.querySelectorAll('.nav-item[data-page]').forEach(el => {
@@ -65,38 +73,100 @@ const APP = {
 
     // Sidebar toggle (desktop)
     const sidebar = document.getElementById('sidebar');
-    document.getElementById('sidebarToggle').addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-    });
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+      });
+    }
 
     // Mobile toggle
     const overlay = document.getElementById('sidebarOverlay');
-    document.getElementById('mobileToggle').addEventListener('click', () => {
-      sidebar.classList.add('mobile-open');
-      overlay.classList.add('active');
-    });
+    const mobileToggle = document.getElementById('mobileToggle');
+    if (mobileToggle) {
+      mobileToggle.addEventListener('click', () => {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('active');
+      });
+    }
 
-    overlay.addEventListener('click', () => {
-      sidebar.classList.remove('mobile-open');
-      overlay.classList.remove('active');
-    });
+    if (overlay) {
+      overlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+      });
+    }
 
     // Modal
-    document.getElementById('modalClose').addEventListener('click', () => this.closeModal());
-    document.getElementById('modalCancel').addEventListener('click', () => this.closeModal());
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modalOverlay')) this.closeModal();
-    });
+    const modalClose = document.getElementById('modalClose');
+    if (modalClose) modalClose.addEventListener('click', () => this.closeModal());
+    const modalCancel = document.getElementById('modalCancel');
+    if (modalCancel) modalCancel.addEventListener('click', () => this.closeModal());
+    const modalOverlay = document.getElementById('modalOverlay');
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) this.closeModal();
+      });
+    }
 
     // Hash router
     window.addEventListener('hashchange', () => {
-      const page = window.location.hash.slice(1) || 'dashboard';
-      this.navigate(page, false);
+      if (sessionStorage.getItem('amdk_logged_in') === 'true') {
+        const page = window.location.hash.slice(1) || 'dashboard';
+        this.navigate(page, false);
+      }
     });
+
+    this.listenersSetup = true;
+  },
+
+  initAfterLogin() {
+    // Date display
+    const now = new Date();
+    const dateBadge = document.getElementById('currentDate');
+    if (dateBadge) {
+      dateBadge.textContent = now.toLocaleDateString('id-ID', {
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+      });
+    }
+
+    // Company name
+    const companyName = DB.get('company_name') || 'TRS water';
+    const el = document.getElementById('companyNameDisplay');
+    if (el) el.textContent = companyName;
 
     // Init page
     const initialPage = window.location.hash.slice(1) || 'dashboard';
     this.navigate(initialPage, false);
+  },
+
+  handleLogin() {
+    const user = document.getElementById('loginUser').value;
+    const pass = document.getElementById('loginPass').value;
+    const errorEl = document.getElementById('loginError');
+
+    if (user === 'yuliareza' && pass === '12345') {
+      if (errorEl) errorEl.style.display = 'none';
+      sessionStorage.setItem('amdk_logged_in', 'true');
+      document.body.className = 'logged-in';
+      this.initAfterLogin();
+      this.toast('Login berhasil!', 'success');
+    } else {
+      if (errorEl) errorEl.style.display = 'block';
+      this.toast('Username atau password salah', 'error');
+    }
+  },
+
+  logout() {
+    sessionStorage.removeItem('amdk_logged_in');
+    document.body.className = 'logged-out';
+    const userInp = document.getElementById('loginUser');
+    const passInp = document.getElementById('loginPass');
+    const errorEl = document.getElementById('loginError');
+    if (userInp) userInp.value = '';
+    if (passInp) passInp.value = '';
+    if (errorEl) errorEl.style.display = 'none';
+    this.toast('Anda telah keluar', 'info');
   },
 
   navigate(page, updateHash = true) {
@@ -258,14 +328,18 @@ const APP = {
     ];
 
     this.openModal('Menu Lengkap',
-      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         ${pages.map(p => `
           <button onclick="APP.closeModal();APP.navigate('${p.page}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);text-align:left;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;color:var(--text-secondary);transition:var(--transition)" onmouseover="this.style.background='var(--bg-card-hover)';this.style.color='var(--text-primary)'" onmouseout="this.style.background='var(--bg-card)';this.style.color='var(--text-secondary)'">
             <span style="font-size:20px">${p.icon}</span>
             <span>${p.label}</span>
           </button>
         `).join('')}
-      </div>`,
+      </div>
+      <button onclick="APP.closeModal();APP.logout()" class="btn btn-ghost w-full" style="justify-content:center;border-color:rgba(220,38,38,0.18);color:var(--accent-red);background:rgba(220,38,38,0.02);padding:12px;margin-top:4px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 01-2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span style="font-weight:700">Keluar dari Aplikasi</span>
+      </button>`,
       null
     );
     // Hide save button for this modal
