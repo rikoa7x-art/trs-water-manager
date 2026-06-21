@@ -59,6 +59,8 @@ const APP = {
 
     document.body.className = 'logged-in';
     this.initAfterLogin();
+    // Background refresh dari Supabase saat refresh halaman
+    if (window.SYNC) SYNC.pullAll();
   },
 
   setupListeners() {
@@ -122,6 +124,9 @@ const APP = {
   },
 
   initAfterLogin() {
+    // Init Supabase sync layer (buat indikator, patch DB.set)
+    if (window.SYNC) SYNC.init();
+
     // Date display
     const now = new Date();
     const dateBadge = document.getElementById('currentDate');
@@ -142,7 +147,7 @@ const APP = {
     this.navigate(initialPage, false);
   },
 
-  handleLogin() {
+  async handleLogin() {
     const user = document.getElementById('loginUser').value;
     const pass = document.getElementById('loginPass').value;
     const errorEl = document.getElementById('loginError');
@@ -151,6 +156,21 @@ const APP = {
       if (errorEl) errorEl.style.display = 'none';
       sessionStorage.setItem('amdk_logged_in', 'true');
       document.body.className = 'logged-in';
+
+      // Inisialisasi SYNC terlebih dahulu
+      if (window.SYNC) SYNC.init();
+
+      // Tampilkan loading dan tarik data dari Supabase
+      const contentArea = document.getElementById('contentArea');
+      if (contentArea) {
+        contentArea.innerHTML = `
+          <div class="loading-screen">
+            <div class="loading-spinner"></div>
+            <p>Menyinkronkan data dari server...</p>
+          </div>`;
+      }
+      if (window.SYNC) await SYNC.pullAll();
+
       this.initAfterLogin();
       this.toast('Login berhasil!', 'success');
     } else {

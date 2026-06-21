@@ -260,20 +260,27 @@ const DATA = {
 
   addItem(key, item) {
     const list = this.getList(key);
-    list.push({ ...item, id: item.id || uid() });
+    const newItem = { ...item, id: item.id || uid() };
+    list.push(newItem);
     this.setList(key, list);
-    return list[list.length - 1];
+    if (window.SYNC) SYNC.push(key, newItem, 'upsert'); // sync ke Supabase
+    return newItem;
   },
 
   updateItem(key, id, updates) {
     const list = this.getList(key);
     const idx = list.findIndex(x => x.id === id);
-    if (idx >= 0) { list[idx] = { ...list[idx], ...updates }; this.setList(key, list); }
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...updates };
+      this.setList(key, list);
+      if (window.SYNC) SYNC.push(key, list[idx], 'upsert'); // sync ke Supabase
+    }
   },
 
   deleteItem(key, id) {
     const list = this.getList(key);
     this.setList(key, list.filter(x => x.id !== id));
+    if (window.SYNC) SYNC.push(key, { id }, 'delete'); // sync ke Supabase
   },
 
   findById(key, id) {
