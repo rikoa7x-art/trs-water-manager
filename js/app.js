@@ -59,8 +59,16 @@ const APP = {
 
     document.body.className = 'logged-in';
     this.initAfterLogin();
-    // Background refresh dari Supabase saat refresh halaman
-    if (window.SYNC) SYNC.pullAll();
+    // Background refresh dari Supabase — re-render UI setelah data masuk
+    if (window.SYNC) {
+      SYNC.pullAll().then(() => {
+        const isModalOpen = document.getElementById('modalOverlay')
+          ?.classList.contains('active');
+        if (!isModalOpen) {
+          APP.navigate(APP.currentPage, false);
+        }
+      });
+    }
   },
 
   setupListeners() {

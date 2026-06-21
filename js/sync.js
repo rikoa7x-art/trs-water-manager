@@ -6,11 +6,11 @@
  *   - Supabase      → penyimpanan permanen, multi-device, cloud backup
  *
  * Alur:
- *   Login          → pullAll()   : tarik semua data Supabase → localStorage
- *   Tambah/Edit    → push()      : tulis localStorage dulu → Supabase async
- *   Hapus          → push()      : hapus localStorage dulu → Supabase async
- *   Update Stok    → pushStok()  : update tabel stok (format khusus)
- *   Refresh halaman→ pullAll()   : background refresh tanpa block UI
+ *   Login          → pullAll()         : tarik semua data Supabase → localStorage → re-render
+ *   Tambah/Edit    → push()            : tulis localStorage dulu → Supabase async
+ *   Hapus          → push()            : hapus localStorage dulu → Supabase async
+ *   Update Stok    → pushStok()        : update tabel stok (format khusus)
+ *   Klik indikator → manual pullAll()  : sync paksa + re-render halaman
  */
 
 const SYNC = {
@@ -22,8 +22,9 @@ const SYNC = {
     'kinerja_sales', 'biaya_operasional'
   ],
 
-  _initialized: false,
-  _pulling: false,
+  _initialized:    false,
+  _pulling:        false,
+  _shownSetupWarn: false,
 
   /* ============================================================
      INISIALISASI
@@ -32,7 +33,7 @@ const SYNC = {
     if (this._initialized) return;
     this._initialized = true;
 
-    // Patch DB.set — intercept setiap update stok
+    // Patch DB.set — intercept setiap update stok agar di-push ke Supabase
     const _origSet = DB.set.bind(DB);
     DB.set = (key, value) => {
       _origSet(key, value);
@@ -41,7 +42,7 @@ const SYNC = {
       }
     };
 
-    // Indikator sync di topbar
+    // Buat indikator di topbar
     this._createIndicator();
 
     // Event online/offline
@@ -50,14 +51,14 @@ const SYNC = {
 
     if (!window._supa) {
       this._updateIndicator('error');
-      console.warn('[SYNC] Supabase tidak tersedia, running dalam mode offline.');
+      console.warn('[SYNC] Supabase tidak tersedia — mode offline.');
     } else {
-      this._updateIndicator('online');
+      this._updateIndicator('idle');
     }
   },
 
   /* ============================================================
-     INDIKATOR STATUS
+     INDIKATOR STATUS (klik untuk manual sync)
      ============================================================ */
   _createIndicator() {
     if (document.getElementById('syncDot')) return;
@@ -66,38 +67,63 @@ const SYNC = {
 
     const wrap = document.createElement('div');
     wrap.id = 'syncDot';
+    wrap.title = 'Klik untuk sinkronisasi manual';
     wrap.style.cssText = [
       'display:flex', 'align-items:center', 'gap:5px',
       'font-size:10px', 'font-weight:600', 'color:var(--text-muted)',
-      'cursor:default', 'user-select:none', 'flex-shrink:0'
+      'cursor:pointer', 'user-select:none', 'flex-shrink:0',
+      'padding:4px 6px', 'border-radius:6px',
+      'transition:background .15s'
     ].join(';');
     wrap.innerHTML = `
       <div id="syncDotInner" style="
         width:7px;height:7px;border-radius:50%;background:#94a3b8;
-        flex-shrink:0;transition:background .4s, box-shadow .4s;
+        flex-shrink:0;transition:background .4s,box-shadow .4s;
       "></div>
-      <span id="syncDotLabel" class="hide-on-mobile">Cloud</span>
+      <span id="syncDotLabel" class="hide-on-mobile">Sync</span>
     `;
-    wrap.title = 'Status sinkronisasi Supabase';
+
+    // Hover effect
+    wrap.addEventListener('mouseenter', () => {
+      wrap.style.background = 'rgba(148,163,184,0.1)';
+    });
+    wrap.addEventListener('mouseleave', () => {
+      wrap.style.background = 'transparent';
+    });
+
+    // Klik = manual sync + re-render halaman
+    wrap.addEventListener('click', async () => {
+      if (SYNC._pulling) return;
+      await SYNC.pullAll();
+      const isModalOpen = document.getElementById('modalOverlay')
+        ?.classList.contains('active');
+      if (!isModalOpen && window.APP) {
+        APP.navigate(APP.currentPage, false);
+        APP.toast('✓ Data berhasil disinkronkan dari server', 'success');
+      }
+    });
+
     topRight.insertBefore(wrap, topRight.firstChild);
   },
 
   _updateIndicator(status) {
     const dot   = document.getElementById('syncDotInner');
     const label = document.getElementById('syncDotLabel');
+    const wrap  = document.getElementById('syncDot');
     if (!dot) return;
 
     const map = {
-      online:  { bg: '#22c55e', glow: 'rgba(34,197,94,0.35)',   txt: 'Sync ✓' },
-      syncing: { bg: '#f59e0b', glow: 'rgba(245,158,11,0.35)',  txt: 'Sync...' },
-      error:   { bg: '#ef4444', glow: 'rgba(239,68,68,0.35)',   txt: 'Offline' },
-      offline: { bg: '#94a3b8', glow: 'rgba(148,163,184,0.2)',  txt: 'Offline' },
+      idle:    { bg: '#94a3b8', glow: 'rgba(148,163,184,0.2)', txt: 'Cloud',    tip: 'Klik untuk sinkronisasi' },
+      online:  { bg: '#22c55e', glow: 'rgba(34,197,94,0.35)',  txt: 'Sync ✓',  tip: 'Tersinkron — klik untuk refresh' },
+      syncing: { bg: '#f59e0b', glow: 'rgba(245,158,11,0.35)', txt: 'Sync...', tip: 'Menyinkronkan data...' },
+      error:   { bg: '#ef4444', glow: 'rgba(239,68,68,0.35)',  txt: '⚠ Sync',  tip: 'Gagal sinkronisasi — klik untuk coba lagi' },
+      offline: { bg: '#94a3b8', glow: 'rgba(148,163,184,0.2)', txt: 'Offline', tip: 'Tidak ada koneksi internet' },
     };
-    const c = map[status] || map.offline;
+    const c = map[status] || map.idle;
     dot.style.background  = c.bg;
     dot.style.boxShadow   = `0 0 0 3px ${c.glow}`;
     if (label) label.textContent = c.txt;
-    document.getElementById('syncDot').title = `Supabase: ${status}`;
+    if (wrap)  wrap.title = c.tip;
   },
 
   /* ============================================================
@@ -105,30 +131,49 @@ const SYNC = {
      ============================================================ */
   async pullAll() {
     if (!window._supa) return;
+    if (this._pulling) return;
+
     this._pulling = true;
     this._updateIndicator('syncing');
-    let hasData = false;
+
+    let hasData    = false;
+    let errorCount = 0;
+    let isMissingTables = false;
 
     try {
       // Tarik setiap tabel
       for (const table of this.TABLES) {
         try {
           const { data, error } = await _supa.from(table).select('*');
+
           if (error) {
+            errorCount++;
+            // Deteksi tabel belum dibuat
+            if (error.message && (
+              error.message.includes('relation') ||
+              error.message.includes('does not exist') ||
+              error.code === '42P01'
+            )) {
+              isMissingTables = true;
+            }
             console.warn(`[SYNC] Pull error [${table}]:`, error.message);
             continue;
           }
+
           if (data && data.length > 0) {
             hasData = true;
-            // Tulis langsung ke localStorage (bypass patch DB.set)
+            // Tulis langsung ke localStorage (bypass patch DB.set untuk hindari loop)
             localStorage.setItem(DB.PREFIX + table, JSON.stringify(data));
           }
         } catch (e) {
+          errorCount++;
           console.warn(`[SYNC] Pull exception [${table}]:`, e.message || e);
         }
       }
 
-      // Stok — format berbeda: rows [{produk_id, jumlah}] → object {P1: 350}
+      // ---- Stok (format khusus) ----
+      // Di localStorage: {P1: 350, P2: 120}
+      // Di Supabase:     [{produk_id: 'P1', jumlah: 350}, ...]
       try {
         const { data: stokRows, error } = await _supa.from('stok').select('*');
         if (!error && stokRows && stokRows.length > 0) {
@@ -136,14 +181,31 @@ const SYNC = {
           const stokObj = {};
           stokRows.forEach(r => { stokObj[r.produk_id] = r.jumlah; });
           localStorage.setItem(DB.PREFIX + 'stok', JSON.stringify(stokObj));
+        } else if (error) {
+          if (error.message && error.message.includes('relation')) isMissingTables = true;
         }
       } catch (e) {
         console.warn('[SYNC] Pull stok error:', e.message || e);
       }
 
-      // Jika Supabase kosong → ini pertama kali → migrasi data dari localStorage
-      if (!hasData) {
-        console.log('[SYNC] Database Supabase kosong. Migrasi data awal...');
+      // ---- Tabel belum dibuat di Supabase ----
+      if (isMissingTables && !this._shownSetupWarn) {
+        this._shownSetupWarn = true;
+        this._updateIndicator('error');
+        setTimeout(() => {
+          if (window.APP) {
+            APP.toast(
+              '⚠️ Tabel Supabase belum dibuat! Buka file supabase_setup.sql dan jalankan di SQL Editor Supabase.',
+              'error'
+            );
+          }
+        }, 600);
+        return;
+      }
+
+      // ---- Supabase kosong → migrasi data awal dari localStorage ----
+      if (!hasData && !isMissingTables) {
+        console.log('[SYNC] Supabase kosong — migrasi data awal...');
         await this._pushLocalToSupabase();
       }
 
@@ -153,14 +215,13 @@ const SYNC = {
     } catch (e) {
       console.error('[SYNC] pullAll error:', e);
       this._updateIndicator('error');
-      setTimeout(() => this._updateIndicator(navigator.onLine ? 'online' : 'offline'), 4000);
     } finally {
       this._pulling = false;
     }
   },
 
   /* ============================================================
-     MIGRASI AWAL: localStorage → Supabase (satu kali saja)
+     MIGRASI AWAL: localStorage → Supabase (otomatis pertama kali)
      ============================================================ */
   async _pushLocalToSupabase() {
     if (!window._supa) return;
@@ -182,16 +243,19 @@ const SYNC = {
       }
     }
 
-    // Stok
+    // Push stok
     const stokObj = DB.get('stok') || {};
     await this.pushStok(stokObj);
 
-    console.log(`[SYNC] Migrasi selesai — ${count} record dipush ke Supabase ✓`);
+    console.log(`[SYNC] Migrasi selesai — ${count} record di-push ke Supabase ✓`);
+    if (window.APP && count > 0) {
+      APP.toast(`✓ ${count} data berhasil disimpan ke Supabase`, 'success');
+    }
     this._updateIndicator('online');
   },
 
   /* ============================================================
-     PUSH PERUBAHAN RECORD → Supabase (insert / update / delete)
+     PUSH PERUBAHAN RECORD → Supabase
      ============================================================ */
   async push(table, record, operation) {
     if (!window._supa) return;
@@ -209,9 +273,8 @@ const SYNC = {
   },
 
   /* ============================================================
-     PUSH UPDATE STOK → Supabase
-     Stok disimpan sebagai object {P1: 350, P2: 120} di localStorage
-     tapi sebagai rows [{produk_id, jumlah}] di Supabase
+     PUSH STOK → Supabase
+     Konversi: {P1: 350} → [{produk_id:'P1', jumlah:350}]
      ============================================================ */
   async pushStok(stokObj) {
     if (!window._supa || !stokObj) return;
