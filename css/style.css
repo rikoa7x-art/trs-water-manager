@@ -1216,6 +1216,13 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
 }
 
 /* =============================================
+   UTILITY — RESPONSIVE HELPERS
+   ============================================= */
+@media (max-width: 600px) {
+  .hide-on-mobile { display: none !important; }
+}
+
+/* =============================================
    FLOATING ORBS FOR LOGIN
    ============================================= */
 .login-orb {
@@ -1608,10 +1615,12 @@ body.dark-mode .badge-neutral { background: rgba(148,163,184,0.08); color: #94a3
    PRINT
    ============================================= */
 @media print {
-  .sidebar, .topbar, .btn, .mobile-bottom-nav, .fab { display: none !important; }
-  .main-wrapper { margin-left: 0; padding-bottom: 0; }
-  .content-area { padding: 0; }
-  body { background: white; color: black; }
+  .sidebar, .topbar, .btn, .mobile-bottom-nav, .fab,
+  .login-screen-wrap, .modal-overlay, .toast-container { display: none !important; }
+  .main-wrapper { margin-left: 0 !important; padding-bottom: 0 !important; }
+  .content-area { padding: 0 !important; }
+  body { background: white !important; color: black !important; }
+  .card { border: 1px solid #e2e8f0 !important; box-shadow: none !important; }
 }
 
 /* Safe area for notched phones */
